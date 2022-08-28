@@ -1,0 +1,75 @@
+import openpyxl as xl
+import math
+from converter import cm_to_in
+
+wb = xl.load_workbook("kilo_takip.xlsx")
+sheet = wb["Sayfa1"]
+
+
+def kg_ort(row_kg, saved_row_kg, saved_column_kg):
+    output = 0
+    for row in range(row_kg, row_kg + 7):
+        cell = sheet.cell(row, 2)
+        output += float(cell.value)
+    output_cell = sheet.cell(saved_row_kg, saved_column_kg)
+    output_cell.value = round(output / 7, 1)
+
+
+def cal_ort(row_cal, saved_row_cal, saved_column_cal):
+    output = 0
+    for row in range(row_cal, row_cal + 7):
+        cell = sheet.cell(row, 3)
+        output += float(cell.value)
+    output_cell = sheet.cell(saved_row_cal, saved_column_cal)
+    output_cell.value = round(output / 7)
+
+
+def tdee(hafta_sayisi):
+    for row in range(3, hafta_sayisi+2):
+        cell1 = sheet.cell(row, 11)
+        cell2 = sheet.cell(row-1, 11)
+        output = float(cell1.value) - float(cell2.value)
+        output_cell = sheet.cell(row, 13)
+        cal_ort_cell = sheet.cell(row, 12)
+        output_cell.value = round(cal_ort_cell.value - (output * 1100))
+
+
+def vki(hafta_sayisi):
+    for row in range(1, hafta_sayisi + 1):
+        cell1 = sheet.cell(row+1, 11)
+        cell2 = sheet.cell(3, 8)
+        output = float(cell1.value) / float((cell2.value * cell2.value / 10000))
+        output_cell = sheet.cell(row+1, 14)
+        output_cell.value = round(output, 1)
+
+
+def yag_ort(hafta_sayisi):
+    row2 = -5
+    for row in range(1, hafta_sayisi + 1):
+        row2 += 7
+        cell_height = sheet.cell(3, 8)
+        cell_abdomen = sheet.cell(row2, 5)
+        cell_neck = sheet.cell(row2, 6)
+        height = cm_to_in(cell_height.value)
+        abdomen = cm_to_in(cell_abdomen.value)
+        neck = cm_to_in(cell_neck.value)
+        abdomen_neck = abdomen - neck
+        output = 86.010*math.log(abdomen_neck, 10) - 70.041*math.log(height, 10) + 36.76
+        output_cell = sheet.cell(row+1, 15)
+        output_cell.value = round(output, 1)
+
+
+
+hafta_sayisi = int(input("Hafta Sayısı: "))
+x = -5
+y = 1
+for week in range(1, hafta_sayisi + 1):
+    x += 7
+    y += 1
+    kg_ort(x, y, 11)
+    cal_ort(x, y, 12)
+tdee(hafta_sayisi)
+vki(hafta_sayisi)
+yag_ort(hafta_sayisi)
+
+wb.save("kilo_takip.xlsx")
